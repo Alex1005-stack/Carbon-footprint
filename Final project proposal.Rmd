@@ -29,4 +29,4 @@ Datasets from 2010 - 2018
 
 The CDP (formerly the Carbon Disclosure Project) is an organisation based in the United Kingdom which supports companies and cities to disclose the environmental impact of major corporations. It aims to make environmental reporting and risk management a business norm, and drive disclosure, insight and action towards a sustainable economy.
 
-The data set includes for more than 2,000 of the biggest companies self-reported information on carbon footprint, low-carbon transformation strategy and organizational manifestations of them.
+The data set includes for more than 2,000 of the biggest companies self-reported information on carbon footprint, low-carbon transformation strategy and organizational manifestations of them from 2010 to 2018. As the data is proprietory I am not uploading a copy of the data to the GitHub repo (agreed with Prof. Kane).
