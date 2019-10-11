@@ -1,0 +1,91 @@
+---
+title: "Milestone 4"
+author: "Alexander Klueber"
+date: "10/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      error = FALSE,
+                      warning = FALSE)
+```
+```{r}
+library(readxl)
+library(tibble)
+library(tidyverse)
+```
+
+```{r, include =FALSE}
+
+# listing the data paths for all the years
+
+xl_2011 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP 2011 Climate Change.xlsx"
+xl_2012 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP 2012 Climate Change-1.xlsx"
+xl_2013 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP 2013 Climate Change.xlsx"
+xl_2014 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP 2014 Climate Change.xlsx"
+xl_2015 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP 2015 Climate Change-1.xlsx"
+xl_2016 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/2016_carbon footprint.xlsx"
+xl_2017_1 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of Investor CDP 2017_Public Data (with sector Qs)-1.xlsx"
+xl_2017_2 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of Investor CDP 2017_Public Data (with sector Qs)-2.xlsx"
+xl_2018 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP_1578_SupplyChain_Climate_Public with identifiers_2018.xlsx"
+
+# Creating a single data frame for the 2016 data with only the relevant columns
+  # Storing sheet names because lapply will return a list with the number of tabs as length
+  tab_names <- excel_sheets(xl_2016)
+  
+  # Storing sheets in a R file (note - create loop to read in (save relevant Excel files under same name))
+  corporate_carbon_footprints_2016 <- lapply(tab_names, function(x) read_excel(path = xl_2016, sheet = x))
+  
+  
+  # Look at structure of new file
+  str(corporate_carbon_footprints_2016)
+  
+  # Combine sheets to a single data frame using Account numbers
+  ccf_2016_1 <- data.frame(corporate_carbon_footprints_2016[1])
+  ccf_2016_2 <- data.frame(corporate_carbon_footprints_2016[2])
+  
+  ccf_2016 <- ccf_2016_1 %>%
+    left_join(ccf_2016_2, by = c("Account.No", "Account.No"), suffix = c("_scope_1", "_scope_2"))
+
+  glimpse(ccf_2016)
+  
+ # Pull out relevant columns
+ccf_2016_s <-  ccf_2016 %>%
+    select(Organisation = "Organisation_scope_1", Account_Number = "Account.No", Country = "Country_scope_1", Industry = "Industry.Group_scope_1", Ticker = "Ticker_scope_1", ISIN = "ISIN_scope_1", Reporting_from = "Reporting.Period..From_scope_1", Reporting_to ="Reporting.Period..To_scope_1", Scope_1_CO2eqmt = "CC8.2..Please.provide.your.gross.global.Scope.1.emissions.figures.in.metric.tonnes.CO2e", Scope_1_verification = "CC8.6..Please.indicate.the.verification.assurance.status.that.applies.to.your.reported.Scope.1.emissions", Scope_2_verification = "CC8.7..Please.indicate.the.verification.assurance.status.that.applies.to.at.least.one.of.your.reported.Scope.2.emissions.figures...U.200B.", Bio_CO2_rel = "CC8.9..Are.carbon.dioxide.emissions.from.biologically.sequestered.carbon.relevant.to.your.organization.", Bio_CO2_CO2eqmt = "CC8.9a..Please.provide.the.emissions.from.biologically.sequestered.carbon.relevant.to.your.organization.in.metric.tonnes.CO2", Scope_2_rep_CO2eqmt = "CC8.3a..Please.provide.your.gross.global.Scope.2.emissions.figures.in.metric.tonnes.CO2e......CC8.3a..Scope.2..location.based.U.200B.", Scope_2_mrkt_CO2eqmt = "CC8.3a..Scope.2..market.based..if.applicable..U.200B.") %>%
+  data.frame()
+
+# Create an example graphic on 2016 Carbon footprints in scope 1 and 2 across industries
+
+  # cast CO2 data as integers
+ccf_2016_s$Scope_1_CO2eqmt <- as.integer(ccf_2016_s$Scope_1_CO2eqmt)
+ccf_2016_s$Scope_2_rep_CO2eqmt <- as.integer(ccf_2016_s$Scope_2_rep_CO2eqmt)
+ccf_2016_s$Industry <- as.factor(ccf_2016_s$Industry)
+
+ccf_2016_graph <- ccf_2016_s %>%
+  group_by(Industry) %>%
+  summarise(Scope_1 = mean(Scope_1_CO2eqmt, na.rm = TRUE)/1000000, 
+            Scope_2 = mean(Scope_2_rep_CO2eqmt, na.rm = TRUE)/1000000,
+            Total = Scope_1+Scope_2) %>%
+    gather(key = "Scope", 
+         value = "CO2Eq", 
+         Scope_1:Scope_2) %>%
+  top_n(10, Total) %>%
+  ggplot(aes(x = Industry, y = CO2Eq, fill = Scope, group = Scope, color = Scope))+
+  geom_col()+
+  labs(title = "Average Carbon footprint for a company per top 5 emitting industries split by scope", 
+       subtitle = "Data reported in 2016",  
+       y = "Million metric tonnes",
+       x = ("Industries"),
+       caption = "Source: Self-reported CDP 2016 Investor Data")+
+      scale_fill_discrete(name = "Emission scope", limits = c("1: direct emissions", "2: indirect emissions through energy")) +
+   guides(color = FALSE) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1, size = 6)) 
+
+```
+```{r}
+
+ccf_2016_graph
+
+```
