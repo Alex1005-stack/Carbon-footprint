@@ -1,0 +1,85 @@
+---
+title: "Milestone 5: About page"
+author: "Alexander Klueber"
+date: "10/16/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<b>Investing in the future</b>
+
+
+<b>I. Background</b>
+
+This project aims to visualize the carbon footprint and resulting economic damage that an individual student leaves for the next generation of Harvard students through their participation in spending the Harvard endowment proceeds. Ideally I will be able to translate personalized specifications (time at school, current department, share of operations financed through endowment, etc.) into cost for a freshman starting in 25 years.
+
+
+
+<b>II. Data collection</b>
+
+The data used in these visualization falls in three categories: 
+
+
+<b>1. Data on securities reported by the Harvard Management Company</b>
+
+a) SEC filings: 
+Every Quarter the Harvard Management Company needs to file form 13F to the U.S. Security and Exchange Commission. While the form includes all US-listed equity securities (including ETFs), the great majority of investment instruments do not require disclosure. Therefore, only ~$405 Million of the ~$40.9 billion assets under management or about 1% are disclosed. For lack of a better alternative, I will presume in my analysis that the disclosed assets reflect the composition of the undisclosed assets. the The data form used here was filed on 09/08/2019.
+
+https://www.sec.gov/Archives/edgar/data/1082621/000095012319007448/xslForm13F_X01/form13fInfoTable.xml
+
+b) FTE's:
+Around 20.5% of the reported securities are not held by HMC directly, but via FTE's. The holdings of these FTE's and their relative shares, could be accessed via the websites of the respective asset managers. The data used here was reported 09/30/2019.
+
+INVESCO QQQ TR: 
+https://www.invesco.com/portal/site/us/investors/etfs/holdings/?ticker=QQQ
+ISHARES TR CORE S&P500 ETF: 
+https://www.ishares.com/us/products/239726/ishares-core-sp-500-etf
+ISHARES TR CORE S&P MCP ETF: 
+https://www.ishares.com/us/products/239763/ishares-core-sp-midcap-etf
+ISHARES TR CORE S&P SCP ETF: 
+https://www.ishares.com/us/products/239774/ishares-core-sp-smallcap-etf
+SPDR GOLD TRUST GOLD SHS: holding only treasury coupons and strips, not needed for the purposes of this analysis  
+VANGUARD GROUP DIV APP ETF:
+https://advisors.vanguard.com/investments/products/vig/vanguard-dividend-appreciation-etf#portfolio
+VANGUARD INTL EQUITY INDEX F FTSE EMR MKT ETF:
+https://institutional.vanguard.com/web/cf/product-details/fund/0964
+VANGUARD TAX MANAGED INTL FD FTSE DEV MKT ETF:
+https://institutional.vanguard.com/web/cf/product-details/fund/0936
+VANGUARD WORLD FD EXTENDED DUR: holding only treasury coupons and strips, not needed for the purposes of this analysis  
+
+In combination they allowed me to create a CSV file, titled "HMC filed securities Q3 2019" which contains all direct and indirect holdings as reported by the HMC and their relative share in the portfolio.
+
+
+
+<b>2. CDP data base on the self-reported greenhouse gas emissions by companies</b>
+
+a) CDP data
+The CDP (formerly the Carbon Disclosure Project) is an organisation based in the United Kingdom which supports companies and cities to disclose the environmental impact of major corporations. It aims to make environmental reporting and risk management a business norm, and drive disclosure, insight and action towards a sustainable economy.
+
+b) Maniuplation of CDP data
+The available time series (2010 - 2018) was combined to ensure inclusion of the most up to date data available for as many companies as possible.
+
+c) Data privacy
+The data set includes for more than 2,000 of the biggest companies self-reported information on carbon footprint, low-carbon transformation strategy and organizational manifestations of them from 2010 to 2018. As the data is proprietory I am not sharing it in my GitHub repo.
+
+
+<b>3. Data on utilitizaiton of endowment income</b>
+
+For tailoring the carbon footprint via endowment to the specific student's experience, I will use the spending patterns of the endowment income as suggested by the 2018 Harvard Annual financial report and the 2016 Congressional Report.  
+
+https://finance.harvard.edu/annual-report
+https://www.harvard.edu/about-harvard/harvard-glance/endowment
+
+
+<b>III. Additional remarks</b>
+
+In order to quantify the damages of the suggested carbon footprint per student, I will leverage the assumptions (e.g. interest rate) of the Stern report.
+
+
+
+<b>IV. About Me:</b>
+My name is Alexander Klueber. I am a Harvard Kennedy School student passionate about data science and transitioning our economies to a low carbon future. Contact me at alexander_klueber@hks.harvard.edu.
+
