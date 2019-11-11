@@ -81,5 +81,5 @@ In order to quantify the damages of the suggested carbon footprint per student, 
 
 
 <b>IV. About Me:</b>
-My name is Alexander Klueber. I am a Harvard Kennedy School student passionate about data science and transitioning our economies to a low carbon future. Contact me at alexander_klueber@hks.harvard.edu.
+My name is Alexander Klueber. I am an Master in Public Policy student at the Harvard Kennedy School passionate about data science and transitioning our economies to a low carbon future. Contact me at alexander_klueber@hks.harvard.edu.
 

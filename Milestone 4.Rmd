@@ -21,12 +21,12 @@ library(tidyverse)
 
 # listing the data paths for all the years
 
-xl_2011 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP 2011 Climate Change.xlsx"
+xl_2011 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Carbon footprint/2011_carbon footprint.xlsx"
 xl_2012 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP 2012 Climate Change-1.xlsx"
 xl_2013 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP 2013 Climate Change.xlsx"
 xl_2014 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP 2014 Climate Change.xlsx"
 xl_2015 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP 2015 Climate Change-1.xlsx"
-xl_2016 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/2016_carbon footprint.xlsx"
+xl_2016 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Carbon footprint/2016_carbon footprint.xlsx"
 xl_2017_1 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of Investor CDP 2017_Public Data (with sector Qs)-1.xlsx"
 xl_2017_2 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of Investor CDP 2017_Public Data (with sector Qs)-2.xlsx"
 xl_2018 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Copy of CDP_1578_SupplyChain_Climate_Public with identifiers_2018.xlsx"
@@ -34,7 +34,7 @@ xl_2018 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/G
 # Creating a single data frame for the 2016 data with only the relevant columns
   # Storing sheet names because lapply will return a list with the number of tabs as length
   tab_names <- excel_sheets(xl_2016)
-  
+  view(tab_names)
   # Storing sheets in a R file (note - create loop to read in (save relevant Excel files under same name))
   corporate_carbon_footprints_2016 <- lapply(tab_names, function(x) read_excel(path = xl_2016, sheet = x))
   
@@ -43,11 +43,18 @@ xl_2018 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/G
   str(corporate_carbon_footprints_2016)
   
   # Combine sheets to a single data frame using Account numbers
-  ccf_2016_1 <- data.frame(corporate_carbon_footprints_2016[1])
-  ccf_2016_2 <- data.frame(corporate_carbon_footprints_2016[2])
+  ccf_2016_1 <- data.frame(corporate_carbon_footprints_2016[1])%>%
+                group_by(Account.No)%>%
+                nest()
+  ccf_2016_2 <- data.frame(corporate_carbon_footprints_2016[2])%>%
+                group_by(Account.No)%>%
+                nest()
+  
+  view(ccf_2016_1)
   
   ccf_2016 <- ccf_2016_1 %>%
-    left_join(ccf_2016_2, by = c("Account.No", "Account.No"), suffix = c("_scope_1", "_scope_2"))
+    left_join(ccf_2016_2, by = c("Account.No", "Account.No"), suffix = c("_scope_1", "_scope_2"))%>%
+    mutate(Publication_data = "2016")
 
   glimpse(ccf_2016)
   

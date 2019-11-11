@@ -71,15 +71,11 @@ xl_2018 <- "C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/G
              Reporting_year, 
              Scope_1 = "8.2. \r\nPlease provide your gross global Scope 1 emissions figures in metric tonnes CO2e",                  Scope_2 = "8.3. \r\nPlease provide your gross global Scope 2 emissions figures in metric tonnes CO2e", 
              Bio_CO2 = "8.8a. \r\nPlease provide the emissions in metric tonnes CO2") %>%
-             unite("Year_acc_id", c(Reporting_year, Account_Number), sep =" / ")%>% # Create unique ID per line
+             unite("Year_acc_id", c(Reporting_year, Account_Number), sep =" / ") %>% # Create unique ID per line
              mutate(Publication_data = 2013) # Add line for year of publication
     return(ccf_1)
   }
   
-  ?unite
-ccf_2013 <- load_data_2013(xl_2013)
-view(ccf_2013)
-
   load_data_2014 <- function(input){
     ccf_1 <- read_xlsx(input) %>%
              rename(Reporting_from = "Reporting Period\r\nFrom",
@@ -230,26 +226,71 @@ load_data_2018 <- function(input){
   
 ccf_2013 <- load_data_2013(xl_2013)
 view(ccf_2013)
+glimpse(ccf_2013)
 
 ccf_2014 <- load_data_2014(xl_2014)
 view(ccf_2014)
+glimpse(ccf_2014)
 
 ccf_2015 <- load_data_2015(xl_2015)
 view(ccf_2015)
+glimpse(ccf_2015)
   
 ccf_2016 <- load_data_2016(xl_2016)
 view(ccf_2016)
+glimpse(ccf_2016)
 
 ccf_2017 <- load_data_2017(xl_2017)
 view(ccf_2017)
+glimpse(ccf_2017)
 
 ccf_2018 <- load_data_2018(xl_2018)
 view(ccf_2018)
+glimpse(ccf_2018)
+
+# A.4 Uniting dataframes per year into one dataframe  
+ccf_total <- as.data.frame(rbind(ccf_2018, ccf_2017, ccf_2016, ccf_2015, ccf_2014, ccf_2013))
+glimpse(ccf_total)
+view(ccf_total)
+# A.5 To get most up to date data for every account for every available year: group by Year_acc_id and then slice for first to get newest data if there are multiple, separate Year_acc_id again  
+
+ccf_total_n <- ccf_total %>%
+  group_by(Year_acc_id) %>%
+  slice(1) %>%
+  separate(Year_acc_id, c("Year", "Account_Number"), sep = " / ")
+
+# A.6 Cast CO2 scopes as integers 
+ccf_total_n$Scope_1 <- as.integer(ccf_total_n$Scope_1)
+ccf_total_n$Scope_2 <- as.integer(ccf_total_n$Scope_2)
+ccf_total_n$Bio_CO2 <- as.integer(ccf_total_n$Bio_CO2)
+
+# A.7 Create sum column for Total 
+ccf_total_n_a <- ccf_total_n %>%
+  rowwise() %>% 
+  mutate(Total = sum(Scope_1,Scope_2,Bio_CO2, na.rm = TRUE))
+
+glimpse(ccf_total_n_a)
+
+dir.create("clean-data")
+write_rds(ccf_total_n_a, "clean-data/ccf_combined.rds", compress = "none")
+```
 
 
-# A.4 Uniting data into one dataframe  
+```{r}
+# B. SEC filings
 
-# A.5 Order by Publication data, Group by Year_acc_id and then slice for first to get newest data if there are multiple, separate Year_acc_id again  
+SEC_filings <- read_xlsx("C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Funds/HMC filed securities.xlsx")
 
+view(SEC_filings)
+
+write_rds(SEC_filings, "clean-data/SEC_filings.rds", compress = "none")
+```
+
+```{r}
+# C. Endowment utilitization 
+
+Endowment_split <- read_xlsx("C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Spending/2018 Spending split.xlsx")
+
+write_rds(Endowment_split, "clean-data/Endowment_split.rds", compress = "none")
 ```
 
