@@ -1,0 +1,141 @@
+---
+title: "Emissions"
+author: "Alexander Klueber"
+date: "11/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(maps)
+library(readxl)
+library(tibble)
+library(lubridate)
+library(tidyverse)
+```
+
+```{r}
+#A. Consolidation of carbon footprints, SEC filings and Bloomberg market capitalization into one central table
+
+#A.1 Load relevant datasets
+
+SEC_filings_cons <- read_rds("clean-data/SEC_filings_cons.rds")
+CCF_combined <- read_rds("clean-data/ccf_combined.rds")
+Market_caps <- read_xlsx("C:/Users/Alexander Klueber/Desktop/University/Coursework/Fall 2019/GOV 1005 Data/Final project/Final project/Funds/Market caps.xlsx")
+
+
+#A.2 Join tables on Tickers and ISIN
+
+HMC_CCF <- CCF_combined %>%
+           separate(Ticker, c("Ticker", "Country_code")) %>% # Isolate matchable Ticker
+           left_join(SEC_filings_cons, by = c("Ticker", "Ticker")) %>% # Join CCF with SEC_filings
+           filter(!is.na(`Share of portfolio`)) %>% # Limiting to the observations that could be matched 
+          left_join(Market_caps, by = c("ISIN", "ISIN"))%>%
+           filter(MarketCap_09_30 != "N/A")
+  
+
+  #Recasting Market Capitalization as a number
+  
+  HMC_CCF$MarketCap_09_30 <- as.numeric(HMC_CCF$MarketCap_09_30)
+
+  
+#A.3 To rebase ownership share - calcualte share of portfolio available in data per year  
+
+  HMC_CCF_year <- HMC_CCF %>%
+                group_by(Year) %>%
+                summarize(Total_share_year = sum(`Share of portfolio`))
+
+  
+#A.4 Rebase ownership share acc. to share of companies remaining in the dataset
+
+HMC_CCF_v2 <- HMC_CCF %>%
+              left_join(HMC_CCF_year, by = c("Year", "Year")) %>%
+              mutate(Rebased_portfolio_share = `Share of portfolio`/Total_share_year)
+
+
+#A.5 CONTROL: Share of portfolio available in data per year must all be 1
+
+HMC_CCF_v2 %>%
+  group_by(Year) %>%
+  summarize(sum(Rebased_portfolio_share))
+
+
+#A. 6 Take share of porfolio times 40.9 billion USD (acc. to Harvard Magazine: https://www.harvardmagazine.com/2019/09/harvard-endowment-increases-4-3-percent-to-40-9-billion) to extend available information as proxy to the entire . Also translate market cap from in millions to simple Euro amounts. Also calculate Harvard's ownership share in company. Also calculate the CO2 footprint in MT owned by Harvard 
+
+HMC_CCF_v4 <- HMC_CCF_v2 %>%
+  mutate(Ownership_USD = Rebased_portfolio_share*40900000000) %>% #Calculate Harvard's ownership stake of company as product of rebased portfolio share times 40.9 bn
+  mutate(MarketCap_USD = MarketCap_09_30*1000000) %>% # Translate company market capitalization into simple dollars
+  mutate(Ownership_share = Ownership_USD/MarketCap_USD) %>% # Calculate Harvard's ownership stake in companies
+  mutate(Carbon_footprint_owned_MT = Ownership_share*Total) # Calculate Harvard's owned corporate carbon footprint as a result of that
+
+
+#CHALLENGE: Dissonance between scaling and company values in years with no/little data. For 2005 2006, 2007 only First Energy Cooperation and SEARS Canada of the HMC portfolio provided CDP  data, therefore rebased share of portfolio is extremely high and ownership share exceeds 1. To resolve, I removed all years with scarce data by only looking at years where we had carbon footptint data for at least 30% of the portfolio ( from 2014 on):
+
+HMC_CCF_v5 <- HMC_CCF_v4 %>%
+  filter(Year > 2013) %>%
+  select(Organisation, Year, Account_Number, Country, Industry, Ticker, Scope_1, Scope_2, Bio_CO2, Total, Rebased_portfolio_share, Ownership_share, Carbon_footprint_owned_MT) # Select relevant columns only
+
+
+#A. 7 Write dataset to clean-data file for graphical visualization
+
+write_rds(HMC_CCF_v5, "clean-data/HMC_Carbon_Footprint.rds", compress = "none")
+```
+
+```{r}
+#B. Consolidation of endowment split, Harvard Schools and carbon footprint data for a table of carbon footprint per student per school for 2014 - 2017
+
+#(Note: endowment spending entirely on financing operations: "The endowment distributed 1.9 bn USD in the fiscal year ending June 30, 2019, contributing over a third of Harvard’s total operating revenue in that year" https://www.harvard.edu/about-harvard/harvard-glance/endowment / fy 2019 financial report)
+
+
+#B. 1 Read in endowment spending data, and data on Harvard Schools 
+
+Endowment_split <- read_rds("clean-data/Endowment_split.rds")
+students <- read_rds("clean-data/students.rds")
+students_est <- read_rds("clean-data/students_est.rds.")
+
+
+#B. 2 Consolidate tables on spending data and Harvard Schools 
+
+students_all <- students %>%
+  left_join(students_est, by = c("School", "School")) %>%
+  mutate(Operating_revenue_total = ifelse(Operating_revenue.x != 0, Operating_revenue.x, Operating_revenue_est))%>% # Combine data on available and estimated operating revenue
+  select(School,Student_pop.x,Operating_revenue_total)%>%
+  left_join(Endowment_split, by = c("School", "School"))%>%
+  mutate(Endowment_financing=`Endowment income made available for operations`*Operating_revenue_total,
+         Endowment_share_per_school = Endowment_financing/sum(Endowment_financing)) #Using endowment income made available for operations from FY 2019 Harvard annual report and total operating revenue to determine an operational share of endowment (not owned by the schools as assets, but used by the schools to finance their operations aka the experience of the student attending)
+
+schools <- students_all %>%
+  select(School, Share_carbon_ownership = Endowment_share_per_school, Student_pop.x)
+
+write_rds(schools, "clean-data/Schools_endowment payout.rds", compress = "none")
+
+#B. 3 Calculate total Carbon footprint of Harvard per year
+
+CCF_per_year <- HMC_CCF_v5 %>%
+  group_by(Year)%>%
+  summarize(Carbon_footprint_owned_MT_year = sum(Carbon_footprint_owned_MT)) %>%
+  spread(key = Year, value = Carbon_footprint_owned_MT_year)
+
+#B. 4 Calculate total Carbon footprint of Harvard per school and per student
+
+  CCF_per_school <- data.frame()
+  for (j in 1:4){
+    for(i in 1:10){
+    CCF_per_school[i,j] <- CCF_per_year[1,j]*students_all[i,6]
+    }
+  }
+  row.names(CCF_per_school) <- students_all$School
+  
+  CCF_per_student <- data.frame()
+  for (j in 1:4){
+    for(i in 1:10){
+    CCF_per_student[i,j] <- CCF_per_school[i,j]/students_all[i,2]
+    }
+  }
+  
+  row.names(CCF_per_student) <- students_all$School
+  colnames(CCF_per_student) <- c(2014,2015,2016,2017)
+```
+
