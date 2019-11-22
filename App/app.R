@@ -18,6 +18,7 @@ library(readr)
 library(shiny)
 library(markdown)
 library(tidyverse)
+library(forcats)
 
 # 
 Pie_SEC_share <- read_rds("Pie_SEC_share.rds")
@@ -35,7 +36,12 @@ ui <- navbarPage("Carbon footprint",
                                      plotOutput("Students")
                              )
                         ),
-
+                 tabPanel("Carbon footprint per School in MT",
+                          DT::dataTableOutput("CO2Schools")
+                 ),
+                 tabPanel("Carbon footprint per student in MT",
+                          DT::dataTableOutput("CO2Students")
+                 ),
                  tabPanel("About",
                           includeMarkdown("About.md")
                  )
@@ -73,7 +79,33 @@ output$Endowment <- renderPlot({
     Pie_endowment_payout <- pie(Schools_endowment_payout$Share_carbon_ownership, labels = lbls, border = "white", col = myPalette, main = "Share of endowment payout per school for FY2019 / Share of Corporate Carbon Footprint inhereted from endowment assets")
         
     })
+
+output$Students <- renderPlot({
+    
+    Schools_endowment_payout <- read_rds("Schools_endowment payout.rds")
+    
+    Schools_endowment_payout %>%
+        mutate(name = fct_reorder(School, Student_pop.x)) %>%
+        ggplot( aes(x=name, y=Student_pop.x)) +
+        geom_bar(stat="identity", fill="#f68060", alpha=.6, width=.4) +
+        coord_flip() +
+        xlab("") +
+        ylab("Students")+
+        theme_bw()
+})
+
+output$CO2Schools <- DT::renderDataTable({
+    CCF_per_school <- read_rds("CCF_per_school.rds")
+    DT::datatable(CCF_per_school)
+})
+
+
+output$CO2Students <- DT::renderDataTable({
+    CCF_per_student <- read_rds("CCF_per_student.rds")
+    DT::datatable(CCF_per_student)
+})
 }
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)

@@ -9,10 +9,9 @@
  
   #1. Copy graphs from graphics directory into Shiny directory   
   file.copy(from = "clean-data/Schools_endowment payout.rds", to = "App/Schools_endowment payout.rds")
-    file.copy(from = "graphics/Pie_SEC_share.rds", to = "App/Pie_SEC_share.rds")
-    file.copy(from = "graphics/Translate_endowment_payout.rds", to = "App/Translate_endowment_payout.rds")
-    file.copy(from = "graphics/Pie_endowment_payout.rds", to = "App/Pie_endowment_payout.rds")
-    file.copy(from = "graphics/Barplot_students.rds", to = "App/Barplot_students.rds")
-    
+  file.copy(from = "clean-data/CCF_per_student.rds", to = "App/CCF_per_student.rds")
+  file.copy(from = "clean-data/CCF_per_school.rds", to = "App/CCF_per_school.rds")
+  
+  
   #2. Copy about page   
     file.copy(from = "About.md", to = "App/About.md")

@@ -128,6 +128,9 @@ CCF_per_year <- HMC_CCF_v5 %>%
   }
   row.names(CCF_per_school) <- students_all$School
   
+  write_rds(CCF_per_school, "clean-data/CCF_per_school.rds", compress = "none")
+
+  
   CCF_per_student <- data.frame()
   for (j in 1:4){
     for(i in 1:10){
@@ -137,5 +140,8 @@ CCF_per_year <- HMC_CCF_v5 %>%
   
   row.names(CCF_per_student) <- students_all$School
   colnames(CCF_per_student) <- c(2014,2015,2016,2017)
+  
+  write_rds(CCF_per_student, "clean-data/CCF_per_student.rds", compress = "none")
+
 ```
 
