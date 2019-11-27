@@ -10,6 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
+library(hrbrthemes)
+library(viridis)
+library(janitor)
 library(forcats)
 library(maps)
 library(readxl)
@@ -78,6 +81,30 @@ write_rds(Barplot_students, "graphics/Barplot_students.rds", compress = "none")
 ```{r}
 #B. Total emissions owned by the schools over 2014 - 2017 
 
+#B.1 Load in data
+
+CCF_per_school <- read_rds("clean-data/CCF_per_school.rds")
+
+#B.2 Visualize line chart
+CCF_per_school %>%
+  filter(School == "Total")
+  ggplot() +
+  aes(x=Year, y=Carbon_footprint_in_MT, group=Schools, color = Schools)
+
+
+
+CCF_per_school %>%
+  filter(Schools != "Total") %>%
+  mutate(Carbon_footprint_in_MT_k=Carbon_footprint_in_MT/1000)%>%
+  ggplot() +
+  aes(x=Year, y=Carbon_footprint_in_MT_k, group=Schools, color = Schools) +
+  geom_line() +
+  scale_color_viridis(discrete = TRUE) +
+  labs(title = "Carbon footprint 'inherited' from endowment for: : {frame_time}",
+       y = "Carbon footprint (in '000 MT)")
+
+?transition
+  
 #write_rds(Chart_emissions_by_school, "graphics/Chart_emissions_by_school", compress = "none")
 ```
 ```{r}

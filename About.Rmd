@@ -2,20 +2,19 @@
 title: "Milestone 5: About page"
 author: "Alexander Klueber"
 date: "10/16/2019"
-output: html_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-<b>Investing in the future</b>
+<b>An investment in the past</b>
 
 
 <b>I. Background</b>
 
-This project aims to visualize the carbon footprint and resulting economic damage that an individual student leaves for the next generation of Harvard students through their participation in spending the Harvard endowment proceeds. Ideally I will be able to translate personalized specifications (time at school, current department, share of operations financed through endowment, etc.) into cost for a freshman starting in 25 years.
-
+This project aims to visualize the carbon footprint that an individual Harvard student inherents on a yearly basis by enjoying the benefits of the Harvard endowment subsidizing the Harvard Schools. This can be specified by Harvard School. 
 
 
 <b>II. Data collection</b>

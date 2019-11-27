@@ -126,10 +126,6 @@ CCF_per_year <- HMC_CCF_v5 %>%
     CCF_per_school[i,j] <- CCF_per_year[1,j]*students_all[i,6]
     }
   }
-  row.names(CCF_per_school) <- students_all$School
-  
-  write_rds(CCF_per_school, "clean-data/CCF_per_school.rds", compress = "none")
-
   
   CCF_per_student <- data.frame()
   for (j in 1:4){
@@ -138,10 +134,40 @@ CCF_per_year <- HMC_CCF_v5 %>%
     }
   }
   
-  row.names(CCF_per_student) <- students_all$School
-  colnames(CCF_per_student) <- c(2014,2015,2016,2017)
+  CCF_per_school <- add_column(CCF_per_school, students_all$School, .before = 1)
+  colnames(CCF_per_school) <- c("Schools",2014,2015,2016,2017)
+
+  CCF_per_school <- CCF_per_school %>%
+  adorn_totals("row")%>%
+    gather(key = "Year", value = "Carbon_footprint_in_MT", 2:5)%>%
+    mutate(Carbon_footprint_in_MT= (Carbon_footprint_in_MT/1000),
+           Year =as.numeric(Year))
   
-  write_rds(CCF_per_student, "clean-data/CCF_per_student.rds", compress = "none")
+  write_rds(CCF_per_school, "clean-data/CCF_per_school.rds", compress = "none")
+  
+  
+  CCF_per_student <- add_column(CCF_per_student, students_all$School, .before = 1)
+  colnames(CCF_per_student) <- c("Schools",2014,2015,2016,2017)
+  
+  # Just look at 2017 data / Average_carbon_footprint_US of 15.8 according to monthly Energy Review November 2019 by the EPA (Table 1.7: Primary Energy Consumption, Energy Expenditures, and Carbon Dioxide Emissions Indicators) / Emissions per Capita column for 2017 / Reduction on the individual level per measure 
+  
+  CCF_per_student_red <- CCF_per_student %>%
+    select("Schools", "2017") %>%
+    mutate(`Average annual carbon footprint in US per individual` = 15.8,
+           `Additional carbon footprint via Harvard Endowment` = round(`2017`,2),
+           `Reallocate Harvard endowment to assets with zero emissions` = -round(`2017`,2),
+           `Live car free` = -3.08,
+           `Avoid a transatlantic flight` = -1.6,
+           `Buy green energy` = -1.4,
+           `Renounce all meat` = -0.91) %>%
+          select(-`2017`) %>%
+    gather(key = "Type", value = "Carbon_footprint_in_MT", 2:8) %>%
+    mutate(Action = ifelse(Carbon_footprint_in_MT > 0, "Carbon footprint", "Reduction measure"))
+  
+# Locking in order of types as to be displayed in the bar chart  
+  CCF_per_student_red$Type <- factor(CCF_per_student_red$Type, rev(unique(CCF_per_student_red$Type)))
+
+  write_rds(CCF_per_student_red, "clean-data/CCF_per_student_red.rds", compress = "none")
 
 ```
 

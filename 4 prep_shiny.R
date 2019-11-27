@@ -8,10 +8,13 @@
     # how it does it.
  
   #1. Copy graphs from graphics directory into Shiny directory   
+  file.remove("App/Schools_endowment payout.rds")
   file.copy(from = "clean-data/Schools_endowment payout.rds", to = "App/Schools_endowment payout.rds")
-  file.copy(from = "clean-data/CCF_per_student.rds", to = "App/CCF_per_student.rds")
+  file.remove("App/CCF_per_student_red.rds")
+  file.copy(from = "clean-data/CCF_per_student_red.rds", to = "App/CCF_per_student_red.rds")
+  file.remove("App/CCF_per_school.rds")
   file.copy(from = "clean-data/CCF_per_school.rds", to = "App/CCF_per_school.rds")
   
-  
+  ?
   #2. Copy about page   
     file.copy(from = "About.md", to = "App/About.md")
