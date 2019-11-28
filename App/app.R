@@ -1,16 +1,4 @@
-#D. Creating a shiny app to run the animation as a webb application
-
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
-# You can use whatever approach to the Shiny app that you like. 
-# My advice is to start with a Navbar template, perhaps with two tabs: 
-# About (where you write a sentence or two about where you got the data from) and Map.
+library(ggridges)
 library(ggthemes)
 library(giphyr)
 library(shinyanimate)
@@ -20,121 +8,167 @@ library(markdown)
 library(tidyverse)
 library(forcats)
 
-# Read in data
+# A. Read in relevant data that we copied over from the clean-data file to App 
 
 Schools_endowment_payout <- read_rds("Schools_endowment payout.rds")
 CCF_per_school <- read_rds("CCF_per_school.rds")
 CCF_per_student_red <- read_rds("CCF_per_student_red.rds")
+Emitters <- read_rds("Emitter_table.rds")
+CCF_per_year_average_all <- read_rds("CCF_per_year_average_all.rds")
+CCF_per_year_average_HMC <- read_rds("CCF_per_year_average_HMC.rds")
 
-#1. Defining user interface, here a navication bar. Note: link to server via outputID = "map" corresponding to output$map            
-ui <- navbarPage("Carbon footprint",
-                 navbarMenu("Overview key parameters",
-                            tabPanel("SEC filings",
-                                     plotOutput("SEC")
-                            ),
-                            tabPanel("Endowment payouts",
-                                     plotOutput("Endowment")
-                             ),
-                            tabPanel("Student body",
-                                     plotOutput("Students")
-                             )
-                        ),
-                 tabPanel("Carbon footprint - Schools",
-                          
-                 titlePanel("Carbon footprint 'inherited' via endowment per year"),
+
+#B. Defining user interface, including navigation bar, tabs, titles, user inputs and server reference for visualization. 
+?selectInput
+
+#B.1 Defining page in Navbar layout and yeti theme            
+ui <- navbarPage("Carbon footprint inherited through the Harvard Endowment", theme = shinytheme("yeti"),
+
+#B.2 Defining first panel, Carbon footprint inherited through the endowment fund with financing of operations for each of the schools and total                 
                  
-                 #Select school from dropdown menu for development of annual carbon footprint 'inherited' via endowment
-                 #  Multiple can be selected for comparison
-                 # Default is total
-                 
+                 tabPanel("Carbon footprint - Harvard Schools",
+                 titlePanel("Carbon footprint 'inherited' by schools annualy from Harvard endowment to finance operations"),
+
+#B.3 Defining potential user inputs in a sidebar 
+    # Link to Srever via ID "Schools", define label of inputs as "School(s)"
+    #Select schools from dropdown menu for development of annual carbon footprint 'inherited' via endowment
+    # Default is total
+    #  Multiple can be selected for comparison
+    # Changing width of modules 2 for input tab and 10 for visualization
+
                  sidebarLayout(
                      sidebarPanel(
-                         selectInput("Schools",label = strong("Schools"),
+                         selectInput("Schools",label = strong("School(s)"),
                                      choices = unique(CCF_per_school$Schools),
                                      selected = "Total",
                                      multiple = TRUE
-                         )),
+                         ), width = 2),
                      
-                     # Show development
+#B.4 Define link to Server in the main panel 
                      
                      mainPanel(
                          plotOutput("linePlot")
-                     )
-                 )
-                 ),
-                 tabPanel("Carbon footprint - Students",
+                     , width = 10))),
+            
+#B.5 Define second panel on carbon footprint per student dependent on which school they are in (see above for details)
+
+             tabPanel("Carbon footprint - Harvard Students",
                           
-                          titlePanel("Individual carbon footprints - the relative importance of asset reallocation as a footprint reduction lever"),
+                          titlePanel("Carbon footprint per student - the significance of asset reallocation as a lever to reduce the carbon footprint"),
                           
-                          #Select school from dropdown menu for development of annual carbon footprint 'inherited' via endowment and accordingly what reduction could mean
-                          # Default is total
+    #Select school from dropdown menu for development of annual carbon footprint 'inherited' via endowment and accordingly what reduction could mean
+    # Default is FAS
                           
                           sidebarLayout(
                               sidebarPanel(
                                   radioButtons("Students",label = strong("Your school:"),
                                               choices = unique(CCF_per_student_red$Schools),
                                               selected = "FAS (College & GSAS & SEAS)"
-                                  )),
+                                  ), width = 3),
                               
-                              # Show aging curve plot
+    # Default is FAS
                               
                               mainPanel(
                                   plotOutput("barPlot")
-                              )
+                        , width = 9))),
+
+#B.6 Define third panel on carbon footprint per portfolio company that could be matched with CDP data
+
+                 tabPanel("Carbon footprint - portfolio companies (only those part of CDP self-reporting)",
+                          DT::dataTableOutput("Emitters")
+                 ),
+
+#B.7 Define fourth panel on carbon footprint per company in portfolio on average in comparison to random samples of same size from CDP data
+
+                 tabPanel("Comparison of portfolio average footprint",
+                          
+                          titlePanel("Matchable average Carbon footprint in portfolio compared to average of random sample in data set"),
+                          
+                          sidebarLayout(
+                              sidebarPanel(
+                                  radioButtons("Average",label = strong("Year"),
+                                               choices = unique(CCF_per_year_average_HMC$Year),
+                                               selected = 2017
+                                  ), width = 2),
+                              
+                              # Show development
+                              
+                              mainPanel(
+                                  plotOutput("averagePlot")
+                              , width = 10)
                           )
                  ),
-                 tabPanel("About",
-                          includeMarkdown("About.md")
+
+#B.7 Define fifth drop-down that includes detailed About and visualization of some key parameters
+                 navbarMenu("About and key parameters",
+                            tabPanel("About",
+                                     includeMarkdown("About.md")
+                            ),
+                            tabPanel("SEC filings",
+                                     plotOutput("SEC")
+                            ),
+                            tabPanel("Endowment payouts",
+                                     plotOutput("Endowment")
+                            ),
+                            tabPanel("Student body",
+                                     plotOutput("Students")
+                            )
                  )
+
 )
 
 
-# Define server logic required to draw a histogram
+#C Define server logic that takes the data read in under A and builds the desired visualization to be interacted with and referred to in B
 
 server <- function(input, output) {
 
+#C.1 Visualizing the share of the Harvard endowment publicly accessible of total endowment
+    
     output$SEC <- renderPlot({
        
         transparent <- data.frame(
             group = c("Published", "Unpublished"),
-            value = c(405098000, 40900000000)
+            value = c(405098000, 40900000000) #405098000 from HMC SEC filling on Q3 2019 / 40.9 billion from Q3 2019 articles in Crimson and in Harvard magazine
         )
         
         lbls <- transparent$group
         pct <- round(transparent$value/sum(transparent$value)*100)
         lbls <- paste(lbls, pct) # add percents to labels
         lbls <- paste(lbls,"%",sep="") # ad % to labels 
-        pie(transparent$value, labels = lbls, border = "white", col = c("#E69F00", "#999999"), init.angle = 270, main = "HMC publishes ownerhsip for .4 of its 40.9 bn USD in assets")+
-        theme_fivethirtyeight()
+        pie(transparent$value, labels = lbls, border = "white", col = c("#E69F00", "#808080"), init.angle = 270, main = "In 2019 HMC published ownerhsip for .4 of its 40.9 bn USD in assets")
         
     })
     
 output$Endowment <- renderPlot({
-        
+
+#C.2 Visualizing the share of the Harvard endowment payed out to each school (see 2 Data prep for source of data, assumptions, etc.)
+    
     myPalette <- RColorBrewer::brewer.pal(5, "Set2") 
     lbls <- Schools_endowment_payout$School
     pct <- round(Schools_endowment_payout$Share_carbon_ownership*100)
     lbls <- paste(lbls, pct) # add percents to labels
     lbls <- paste(lbls,"%",sep="") # ad % to labels 
-    pie(Schools_endowment_payout$Share_carbon_ownership, labels = lbls, border = "white", col = myPalette, main = "Share of endowment payout per school for FY2019 / Share of Corporate Carbon Footprint inhereted from endowment assets")
+    pie(Schools_endowment_payout$Share_carbon_ownership, labels = lbls, border = "white", col = myPalette, main = "Share of endowment payout per school for FY2019")
         
     })
 
 output$Students <- renderPlot({
-    
+
+#C.3 Visualizing student body (for details, assumptions, etc. see 2. Data prep)    
+        
     Schools_endowment_payout %>%
         mutate(name = fct_reorder(School, Student_pop.x)) %>%
         ggplot( aes(x=name, y=Student_pop.x)) +
         geom_bar(stat="identity", fill="#f68060", alpha=.6, width=.4) +
+        geom_text(aes(x = name, y = Student_pop.x, label = Student_pop.x))+
         coord_flip() +
-        xlab("") +
-        ylab("Students")+
+        labs(title = "Student body per Harvard School", x = "", y = "Students", caption = "Source: Harvard.. TO DO.")+
         theme_fivethirtyeight()
 })
 
-#creating variables for line graph. Needs to be reactive.
+#C.4 Visualizing carbon footprint per school (for details, assumptions, etc. see 2. Data prep) 
 
-# selected from drop down box
+    # Define a reactive susbset that uses the user input in the school selector as a filter to create a data set that defines the changes in the graph 
 
 subset<-reactive({CCF_per_school%>% filter(Schools %in% input$Schools)})
 
@@ -144,16 +178,22 @@ output$linePlot <- renderPlot({
     # draws line plot for selected school
     
     ggplot(subset(), aes(x=subset()$Year, y=subset()$Carbon_footprint_in_MT, color = subset()$Schools))+
-        #smoothed trend line and actual values with scale adapting according to selected elements  
-         
-        scale_y_continuous(expand = c(0, 0), limits = c(0,max(subset()$Carbon_footprint_in_MT+50)))+
-        geom_smooth(alpha = 0.5)+
-        geom_point(alpha = 0.8)+
-
-        # Labels
         
-        labs(x="", y = "'Inherited' carbon footprint in '000 MTs", color = "Schools",
-             caption = "Data sources: Carbon Disclosure Project, HMC SEC filings, HMC annual reports, websites of asset managers, Bloomberg, own calculations")+
+    # define scale, y upper limit depends on max carbon footprint selected     
+         
+        scale_y_continuous(expand = c(0, 0), limits = c(0,max(subset()$Carbon_footprint_in_MT+100)))+
+    
+    # add geom smooth line        
+        geom_smooth(alpha = 0.5)+
+    
+    # add actual data points    
+        geom_point(alpha = 0.8)+
+        geom_text(aes(x = subset()$Year, y = subset()$Carbon_footprint_in_MT+60, label = round(subset()$Carbon_footprint_in_MT,2)))+
+
+    # add labels
+        
+        labs(x="Year", y = "'Inherited' carbon footprint in '000 MTs", color = "Schools",
+             caption = "Data sources: ... TO DO ...Carbon Disclosure Project, HMC SEC filings, HMC annual reports, websites of asset managers, Bloomberg, own calculations")+
         
         # Aesthetics
         
@@ -163,36 +203,72 @@ output$linePlot <- renderPlot({
 )
 
 
-#creating variables for line graph. Needed to be reactive so that it changes
-#as each player in the drop down menu is selected.
+#C.5 Visualizing carbon footprint per student (for details, assumptions, etc. see 2. Data prep) 
 
-# needs to be reactive to be able to change with different names that are
-# selected from drop down box
+# Define a reactive susbset that uses the user input in the school buttons as a filter to create a data set that defines the changes in the graph 
 
 subset_2 <-reactive({CCF_per_student_red%>% filter(Schools %in% input$Students)})
 
 output$barPlot <- renderPlot({
     
-    
-    ggplot(subset_2(), aes(x=subset_2()$Type, y=subset_2()$Carbon_footprint_in_MT, fill =subset_2()$Type))+
-        geom_col(stat="identity", fill=ifelse(subset_2()$Carbon_footprint_in_MT >0,"#f68060","#007f00"), alpha=.6, width=.4) +
+    ggplot(subset_2(), 
+           aes(x=subset_2()$Type, y=subset_2()$Carbon_footprint_in_MT, fill =subset_2
+               ()$Type))+ # data set
+        geom_col(stat="identity", 
+                 fill=ifelse(subset_2()$Carbon_footprint_in_MT >0,"#f68060","#007f00"), 
+                 alpha=.6, width=.4) + # Columnn graph with conditional fill formatting
+        geom_text(aes(x = subset_2()$Type, y = subset_2()$Carbon_footprint_in_MT, 
+                      label = abs(subset_2()$Carbon_footprint_in_MT)), # Adding text labels to the bars witha actual values 
+                      color = ifelse(subset_2()$Carbon_footprint_in_MT >0,"#f68060","#007f00"))+ # Colors with conditional formatting
         coord_flip() +
         #smoothed trend line of performance  
-        scale_y_continuous(limits = c(min(subset_2()$Carbon_footprint_in_MT-1),max(subset_2()$Carbon_footprint_in_MT+1)))+
-        # actual datapoints and WARs from players career. 
-        labs(x="", y = "Carbon footprint in MTs", color = "Type",
-             caption = "The latest available data (displayed) is for 2017. Note: A reduction lever not included above is having one fewer child (-117.7 MT p.a.). Data sources: Wynes & Nicholas (2017): The climate mitigation gap, Carbon Disclosure Project, HMC SEC filings, HMC annual reports, websites of asset managers, Bloomberg, own calculations")+
+        scale_y_continuous(limits = c(min(subset_2()$Carbon_footprint_in_MT-1),max(subset_2()$Carbon_footprint_in_MT+1)))+ # adaptive scales in min and max of y dependent on which school is selected
         
+        # add labels
+        labs(title = "Annual carbon footprint per student and most important reduction levers", 
+             x="", y = "Annual carbon footprint in MT", color = "Type",
+             caption = "The latest available data (displayed) is for 2017. Note: A reduction lever not included above is having one fewer child (-117.7 MT p.a.). Data sources: Wynes & Nicholas (2017): The climate mitigation gap, Carbon Disclosure Project, HMC SEC filings, HMC annual reports, websites of asset managers, Bloomberg, own calculations. ... TO DO")+
         
-        # for aesthetic purpose and including axis labels 
-        
+        # Add aesthetics 
         
         theme_fivethirtyeight()+
         theme(axis.title = element_text(colour = "black" ))
 }
 )
 
+#C.6 Creating data table for emitters (See 2 Data prep for assumptions, details etc.)
 
+output$Emitters <- DT::renderDataTable({
+    DT::datatable(Emitters, caption = "Source: TO DO")
+})
+
+
+#C.7 Bootstrapping random samples from CDP data and compare average to companies in HMC portfolio (See 2 Data prep for assumptions, details etc.) 
+
+# Define two reactive susbsets that uses the user input in the school buttons as a filter to create a data set that defines the changes in the graph. One is for the the Graphs the other to highlight where the HMC portfolio lands
+
+subset_3 <-reactive({CCF_per_year_average_all%>% filter(Year %in% input$Average)})
+subset_4 <-reactive({CCF_per_year_average_HMC%>% filter(Year %in% input$Average)})
+
+
+output$averagePlot <- renderPlot({
+
+    #Pull out relevant HMC value from subset
+    HMC <- subset_4()["Average_carbon_footprint_per_company"]%>%pull()
+    
+    ggplot(subset_3(), aes(x=subset_3()$Average_carbon_footprint_per_company, y =0)) +
+        stat_density_ridges()+ # Visualization via stat_density_ridges
+        scale_x_continuous(breaks = c(2000,4000,6000),limits = c(0,8500))+ # set x axis
+        labs(title = "Average footprint of companies in Harvard endowment portfolio larger than from CDP sample for each year", 
+             subtitle = "1000 repetitions per year with size 562 (Companies in Harvard Management Company's SEC filing that could be matched to CDP data)", 
+             x = "Carbon footprint in '000 MTs", y = "Frequency",
+             caption = "Source: TO DO")+
+        geom_vline(xintercept = HMC,size = 1, color = "red")+
+        geom_text(aes(x = HMC, y = 0, label = "Harvard endowment average"),size=4, angle=90, vjust=-0.4, hjust=0, color = "red")+
+        theme_fivethirtyeight()+
+        theme(axis.title = element_text(colour = "black" ))
+}
+)
 
 }
 

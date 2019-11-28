@@ -9,6 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ```{r}
+library(broom)
+library(moderndive)
 library(maps)
 library(readxl)
 library(tibble)
@@ -35,7 +37,7 @@ HMC_CCF <- CCF_combined %>%
           left_join(Market_caps, by = c("ISIN", "ISIN"))%>%
            filter(MarketCap_09_30 != "N/A")
   
-
+glimpse(CCF_combined)
   #Recasting Market Capitalization as a number
   
   HMC_CCF$MarketCap_09_30 <- as.numeric(HMC_CCF$MarketCap_09_30)
@@ -77,10 +79,11 @@ HMC_CCF_v5 <- HMC_CCF_v4 %>%
   filter(Year > 2013) %>%
   select(Organisation, Year, Account_Number, Country, Industry, Ticker, Scope_1, Scope_2, Bio_CO2, Total, Rebased_portfolio_share, Ownership_share, Carbon_footprint_owned_MT) # Select relevant columns only
 
-
+glimpse(HMC_CCF_v5)
 #A. 7 Write dataset to clean-data file for graphical visualization
 
 write_rds(HMC_CCF_v5, "clean-data/HMC_Carbon_Footprint.rds", compress = "none")
+
 ```
 
 ```{r}
@@ -168,6 +171,64 @@ CCF_per_year <- HMC_CCF_v5 %>%
   CCF_per_student_red$Type <- factor(CCF_per_student_red$Type, rev(unique(CCF_per_student_red$Type)))
 
   write_rds(CCF_per_student_red, "clean-data/CCF_per_student_red.rds", compress = "none")
+
+```
+```{r}
+# C. Reduce to 2017 top 20 companies and reduce to Organisation, Industry, Carbon_footprint_owned_MT
+
+Emitter_table <- HMC_CCF_v5 %>%
+                 filter(Year == 2017) %>%
+                 mutate(Ownership_share = paste(round(Ownership_share*100,2),"%",sep=""),
+                        Carbon_footprint_owned_MT = round(Carbon_footprint_owned_MT,0))%>%
+                 select(`Portfolio company`= Organisation, 
+                        `Harvard share in ownership (scaled)` = Ownership_share, 
+                        `MT inherited in 2017` = Carbon_footprint_owned_MT) %>%
+                 arrange(desc(`MT inherited in 2017`)) 
+                 
+write_rds(Emitter_table, "clean-data/Emitter_table.rds", compress = "none")
+
+```
+
+```{r}
+# D. Replicate an average per year not selected by Harvard through randomly selecting 562 companies form the available sample for each year and comparing 1000 times and compare the average of these to the average we picked in our real data.
+
+CCF_per_year_average_HMC <- HMC_CCF_v5 %>%
+  group_by(Year)%>%
+  summarize(Average_carbon_footprint_per_company = mean(Total)/1000)
+
+CCF_per_year_average_all_2014 <- CCF_combined %>%
+  filter(Year==2014) %>%
+  rep_sample_n(size = 562, replace = TRUE, reps = 1000) %>%
+  group_by(replicate) %>%
+  summarize(Average_carbon_footprint_per_company = mean(Total)/1000)%>%
+  mutate(Year = 2014)
+
+CCF_per_year_average_all_2015 <- CCF_combined %>%
+  filter(Year==2015) %>%
+  rep_sample_n(size = 562, replace = TRUE, reps = 1000) %>%
+  group_by(replicate) %>%
+  summarize(Average_carbon_footprint_per_company = mean(Total)/1000)%>%
+  mutate(Year = 2015)
+
+CCF_per_year_average_all_2016 <- CCF_combined %>%
+  filter(Year==2016) %>%
+  rep_sample_n(size = 562, replace = TRUE, reps = 1000) %>%
+  group_by(replicate) %>%
+  summarize(Average_carbon_footprint_per_company = mean(Total)/1000)%>%
+  mutate(Year = 2016)
+
+CCF_per_year_average_all_2017 <- CCF_combined %>%
+  filter(Year==2017) %>%
+  rep_sample_n(size = 562, replace = TRUE, reps = 1000) %>%
+  group_by(replicate) %>%
+  summarize(Average_carbon_footprint_per_company = mean(Total)/1000)%>%
+  mutate(Year = 2017)
+
+CCF_per_year_average_all <- rbind(CCF_per_year_average_all_2014,CCF_per_year_average_all_2015, CCF_per_year_average_all_2016,CCF_per_year_average_all_2017)
+
+write_rds(CCF_per_year_average_HMC, "clean-data/CCF_per_year_average_HMC.rds", compress = "none")
+
+write_rds(CCF_per_year_average_all, "clean-data/CCF_per_year_average_all.rds", compress = "none")
 
 ```
 
