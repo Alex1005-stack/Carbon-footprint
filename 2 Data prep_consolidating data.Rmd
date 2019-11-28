@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ```{r}
+library(janitor)
 library(broom)
 library(moderndive)
 library(maps)
@@ -37,7 +38,6 @@ HMC_CCF <- CCF_combined %>%
           left_join(Market_caps, by = c("ISIN", "ISIN"))%>%
            filter(MarketCap_09_30 != "N/A")
   
-glimpse(CCF_combined)
   #Recasting Market Capitalization as a number
   
   HMC_CCF$MarketCap_09_30 <- as.numeric(HMC_CCF$MarketCap_09_30)
@@ -79,8 +79,7 @@ HMC_CCF_v5 <- HMC_CCF_v4 %>%
   filter(Year > 2013) %>%
   select(Organisation, Year, Account_Number, Country, Industry, Ticker, Scope_1, Scope_2, Bio_CO2, Total, Rebased_portfolio_share, Ownership_share, Carbon_footprint_owned_MT) # Select relevant columns only
 
-glimpse(HMC_CCF_v5)
-#A. 7 Write dataset to clean-data file for graphical visualization
+#A. 7 Write dataset to clean-data file as back-up
 
 write_rds(HMC_CCF_v5, "clean-data/HMC_Carbon_Footprint.rds", compress = "none")
 
@@ -121,7 +120,7 @@ CCF_per_year <- HMC_CCF_v5 %>%
   summarize(Carbon_footprint_owned_MT_year = sum(Carbon_footprint_owned_MT)) %>%
   spread(key = Year, value = Carbon_footprint_owned_MT_year)
 
-#B. 4 Calculate total Carbon footprint of Harvard per school and per student
+#B. 4 Calculate total Carbon footprint of Harvard per school and per student using loops
 
   CCF_per_school <- data.frame()
   for (j in 1:4){
@@ -136,23 +135,32 @@ CCF_per_year <- HMC_CCF_v5 %>%
     CCF_per_student[i,j] <- CCF_per_school[i,j]/students_all[i,2]
     }
   }
-  
+
+#B. 5 Add a column with school names and appropriate headers for school data
+      
   CCF_per_school <- add_column(CCF_per_school, students_all$School, .before = 1)
   colnames(CCF_per_school) <- c("Schools",2014,2015,2016,2017)
 
-  CCF_per_school <- CCF_per_school %>%
+#B. 6 Add a total row and gather data across all years in one column, divide carbon footprint by 1000 to make it easier to digest and year numeric to allow for limits in X axis during graphing
+
+    CCF_per_school <- CCF_per_school %>%
   adorn_totals("row")%>%
     gather(key = "Year", value = "Carbon_footprint_in_MT", 2:5)%>%
     mutate(Carbon_footprint_in_MT= (Carbon_footprint_in_MT/1000),
            Year =as.numeric(Year))
-  
+
+#B. 7 Write data to clean-data folder for later utilitization
+    
   write_rds(CCF_per_school, "clean-data/CCF_per_school.rds", compress = "none")
   
-  
+#B. 8 Add a column with school names and appropriate headers for student data
+    
   CCF_per_student <- add_column(CCF_per_student, students_all$School, .before = 1)
   colnames(CCF_per_student) <- c("Schools",2014,2015,2016,2017)
   
-  # Just look at 2017 data / Average_carbon_footprint_US of 15.8 according to monthly Energy Review November 2019 by the EPA (Table 1.7: Primary Energy Consumption, Energy Expenditures, and Carbon Dioxide Emissions Indicators) / Emissions per Capita column for 2017 / Reduction on the individual level per measure 
+# B. 9 Filter for 2017 data and Introduce average carbon footprint and various carbon footprint reduction levers
+    # Average_carbon_footprint_US of 15.8 according to monthly Energy Review November 2019 by the EPA (Table 1.7: Primary Energy Consumption, Energy Expenditures, and Carbon Dioxide Emissions Indicators) Emissions per Capita column for 2017 
+    # Reduction on the individual level per measure from Wynes & Nicholas (2017): The climate mitigation gap
   
   CCF_per_student_red <- CCF_per_student %>%
     select("Schools", "2017") %>%
@@ -164,17 +172,20 @@ CCF_per_year <- HMC_CCF_v5 %>%
            `Buy green energy` = -1.4,
            `Renounce all meat` = -0.91) %>%
           select(-`2017`) %>%
-    gather(key = "Type", value = "Carbon_footprint_in_MT", 2:8) %>%
+    gather(key = "Type", value = "Carbon_footprint_in_MT", 2:8) %>% # Gather all levers/footprints in one column
     mutate(Action = ifelse(Carbon_footprint_in_MT > 0, "Carbon footprint", "Reduction measure"))
   
-# Locking in order of types as to be displayed in the bar chart  
+#B.10 Locking in order of types as to be displayed in the bar chart
+  
   CCF_per_student_red$Type <- factor(CCF_per_student_red$Type, rev(unique(CCF_per_student_red$Type)))
 
+#B. 11 Write data to clean-data folder for later utilitization
+  
   write_rds(CCF_per_student_red, "clean-data/CCF_per_student_red.rds", compress = "none")
 
 ```
 ```{r}
-# C. Reduce to 2017 top 20 companies and reduce to Organisation, Industry, Carbon_footprint_owned_MT
+# C. 1 Reduce full dataset to 2017 and Organisation, Ownership share, Carbon_footprint_owned_MT
 
 Emitter_table <- HMC_CCF_v5 %>%
                  filter(Year == 2017) %>%
@@ -184,17 +195,23 @@ Emitter_table <- HMC_CCF_v5 %>%
                         `Harvard share in ownership (scaled)` = Ownership_share, 
                         `MT inherited in 2017` = Carbon_footprint_owned_MT) %>%
                  arrange(desc(`MT inherited in 2017`)) 
+
+#C. 2 Write data to clean-data folder for later utilitization
                  
 write_rds(Emitter_table, "clean-data/Emitter_table.rds", compress = "none")
 
 ```
 
 ```{r}
-# D. Replicate an average per year not selected by Harvard through randomly selecting 562 companies form the available sample for each year and comparing 1000 times and compare the average of these to the average we picked in our real data.
+# D. Replicate a random average for CDP companies for 2014 - 2017 through 1000 times randomly selecting 562 companies from the available sample for each year of the years and compare average of these to the average we saw in our real data.
+
+# D. 1 Create mean for HMC portfolio companies for each of the years
 
 CCF_per_year_average_HMC <- HMC_CCF_v5 %>%
   group_by(Year)%>%
   summarize(Average_carbon_footprint_per_company = mean(Total)/1000)
+
+# D. 2 Repeat 1000 times random selection of size 562 and create average for each of the years
 
 CCF_per_year_average_all_2014 <- CCF_combined %>%
   filter(Year==2014) %>%
@@ -224,10 +241,13 @@ CCF_per_year_average_all_2017 <- CCF_combined %>%
   summarize(Average_carbon_footprint_per_company = mean(Total)/1000)%>%
   mutate(Year = 2017)
 
+# D.3 Combine all years together into one table
+
 CCF_per_year_average_all <- rbind(CCF_per_year_average_all_2014,CCF_per_year_average_all_2015, CCF_per_year_average_all_2016,CCF_per_year_average_all_2017)
 
-write_rds(CCF_per_year_average_HMC, "clean-data/CCF_per_year_average_HMC.rds", compress = "none")
+# D.4 Write files to clean-data for later visualization
 
+write_rds(CCF_per_year_average_HMC, "clean-data/CCF_per_year_average_HMC.rds", compress = "none")
 write_rds(CCF_per_year_average_all, "clean-data/CCF_per_year_average_all.rds", compress = "none")
 
 ```

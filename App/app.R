@@ -1,3 +1,4 @@
+library(shinythemes)
 library(ggridges)
 library(ggthemes)
 library(giphyr)
@@ -19,7 +20,7 @@ CCF_per_year_average_HMC <- read_rds("CCF_per_year_average_HMC.rds")
 
 
 #B. Defining user interface, including navigation bar, tabs, titles, user inputs and server reference for visualization. 
-?selectInput
+
 
 #B.1 Defining page in Navbar layout and yeti theme            
 ui <- navbarPage("Carbon footprint inherited through the Harvard Endowment", theme = shinytheme("yeti"),
@@ -192,7 +193,7 @@ output$linePlot <- renderPlot({
 
     # add labels
         
-        labs(x="Year", y = "'Inherited' carbon footprint in '000 MTs", color = "Schools",
+        labs(x="Year", y = "'Inherited' carbon footprint in '000 MT", color = "Schools",
              caption = "Data sources: ... TO DO ...Carbon Disclosure Project, HMC SEC filings, HMC annual reports, websites of asset managers, Bloomberg, own calculations")+
         
         # Aesthetics
@@ -227,7 +228,7 @@ output$barPlot <- renderPlot({
         # add labels
         labs(title = "Annual carbon footprint per student and most important reduction levers", 
              x="", y = "Annual carbon footprint in MT", color = "Type",
-             caption = "The latest available data (displayed) is for 2017. Note: A reduction lever not included above is having one fewer child (-117.7 MT p.a.). Data sources: Wynes & Nicholas (2017): The climate mitigation gap, Carbon Disclosure Project, HMC SEC filings, HMC annual reports, websites of asset managers, Bloomberg, own calculations. ... TO DO")+
+             caption = "The latest available data (displayed) is for 2017. Note: A reduction lever not included above is having one fewer child (-117.7 MT p.a.). Data sources: Wynes & Nicholas (2017): The climate mitigation gap, Carbon Disclosure Project, HMC SEC filings, HMC annual reports, websites of asset managers, Bloomberg, own calculations, EPA Energy Review November 2019. ... TO DO")+
         
         # Add aesthetics 
         

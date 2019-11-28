@@ -1,13 +1,6 @@
-# C. In preparation for use of Shiny, transfer animation into Shiny directory
+# A. In preparation for use of Shiny, transfer animation into Shiny directory
 
-    # So you probably need another file, perhaps prep_shiny.R. This is a simple 
-    # R script with, perhaps, only one command, something using file_copy() to copy 
-    # map.rds from graphics/ into the Shiny app directory. Is it overkill to have a file 
-    # with only one command? Perhaps. But, in your final project, you may need to do a bunch
-    # of different prep work for the Shiny app. We need a record of what that prep does and 
-    # how it does it.
- 
-  #1. Copy graphs from graphics directory into Shiny directory   
+  #A. 1 Copy visualization data from clean-data directory into Shiny directory /App  
   file.remove("App/Schools_endowment payout.rds")
   file.copy(from = "clean-data/Schools_endowment payout.rds", to = "App/Schools_endowment payout.rds")
   file.remove("App/CCF_per_student_red.rds")
@@ -22,7 +15,6 @@
   file.copy(from = "clean-data/CCF_per_year_average_all.rds", to = "App/CCF_per_year_average_all.rds")
   
   
-    
-  ?
-  #2. Copy about page   
+  #A. 2 Copy about page   
+    file.remove("App/About.md")
     file.copy(from = "About.md", to = "App/About.md")
