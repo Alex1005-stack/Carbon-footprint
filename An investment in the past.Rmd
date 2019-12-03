@@ -1,0 +1,180 @@
+---
+title: "An investment in the past"
+author: "Alexander Klueber"
+date: "12/2/2019"
+output: pdf_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      error = FALSE,
+                      warning = FALSE)
+
+library(shiny)
+library(tinytex)
+library(knitr)
+library(ggridges)
+library(ggthemes)
+library(giphyr)
+library(readr)
+library(markdown)
+library(tidyverse)
+library(forcats)
+
+```
+
+## <br> I. Problem statement </br>
+
+This project aims to increase transparency on the carbon footprint that students in the various Harvard Schools 'inherit' yearly by enjoying the benefits of the Harvard endowment proceeds in financing their schools' operations. It additionally seeks to visualize the relative magnitude of that additional footprint compared to the average carbon footprint in the US and other potential carbon reduction levers. It furthemore includes an overview of how much carbon is 'inherited' annually from each company in the endowment portfolio (that was filed to SEC and could be matched to CDP data). Lastly, it starts to look into the development of carbon consciousness of the endowment overall and for an average company in the portfolio. 
+
+## <br>II. Data sources</br>
+
+See About page in App.
+
+## <br>III. Data cleaning</br>
+
+See About page in App. 
+
+## <br>IV. Key assumptions</br>
+
+- The 1% of assets from the endowment that are reported, can be used to extrapulate the footprint for the entire 40.9 bn USD endowment portfolio. (For lack of transparency and a better alternative) 
+
+- Ownership of a company means ownership of the carbon footprint caused by that company. 
+
+- The carbon footprint can be broken down to the level of an individual student via the share of the "endowment income made available for operations" that a particular Harvard school receives and the size of its student body.
+
+- The double counting of carbon in the "Average annual carbon footprint in US per individual" and the "Additional carbon footprint via Harvard Endowment" is of marginal importance for what it seeks to visualize and may therefore be disregarded.
+
+- The Harvard School of Continuing Education is not included because it doesn't use any Harvard endowment proceeds to finance its operations. 
+
+- Radcliffe is not included because it doesn't have a student structure that compares to the other schools.
+
+- The carbon footprint of a company includes Scope 1, Scope 2 and biologically sequestered carbon.  
+
+## <br>V. Key definitions</br>
+
+- Carbon footprint: when the graphs refer to the carbon footprint of companies, this includes the sum of scope 1, scope 2 and biologically sequestered carbon as/if reported for a given year in the CDP datasets.
+
+- Scope 1 emissions: Companies report GHG emissions from sources they own or control as scope 1 <a href="https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=20&ved=2ahUKEwiLg9-T-ZbmAhVDwFkKHZsECQUQFjATegQIAhAC&url=http%3A%2F%2Fpdf.wri.org%2Fghg_protocol_2004.pdf&usg=AOvVaw3gMh4sMSFwKj6Vp0w__zsW">(See GHG protocol scope 1)</a>.
+
+- Scope 2 emissions: Companies report the emissions from the generation of purchased electricity that is consumed in its owned or controlled equipment or operations as scope 2 <a href="https://ghgprotocol.org/scope_2_guidance">(See GHG protocol scope 2)</a>. When available, I used location-based scope 2 emissions. If location-based scope 2 was not reported, but market-based scope 2 emisions were reported, I used them.
+
+- MT: Metric tonnes of CO2 equivalents.
+
+
+## <br>VI. Key take-aways</br>
+
+#### 1. Conclusions on the overall portfolio
+
+The overall carbon footprint of the portfolio that is publicly accessible has been decreasing rapidly over recent years. This is primarily due to an increase of investments in large tech companies that now make up ~2/3 of the reported portfolio. Because of the intransparency around 99% of the porfolio, this hypothesis can only be an extrapulation based on the available data.
+
+
+
+```{r, fig.width= 12, fig.height = 5}
+#1. Graph on total carbon footprint
+CCF_per_school <- read_rds("clean-data/CCF_per_school.rds")
+
+Graph_1 <- CCF_per_school%>% filter(Schools == "Total")
+
+    # draws line plot for selected school
+ br()   
+    ggplot(Graph_1, aes(x=Graph_1$Year, y=Graph_1$Carbon_footprint_in_MT, color = Graph_1$Schools))+
+        
+    # define scale, y upper limit depends on max carbon footprint selected     
+         
+        scale_y_continuous(expand = c(0, 0), limits = c(0,max(Graph_1$Carbon_footprint_in_MT+100)))+
+    
+    # add geom smooth line        
+        geom_smooth(alpha = 0.5)+
+    
+    # add actual data points    
+        geom_point(alpha = 0.8)+
+        geom_text(aes(x = Graph_1$Year, y = Graph_1$Carbon_footprint_in_MT+60, label = round(Graph_1$Carbon_footprint_in_MT,2)))+
+
+    # add labels
+        
+        labs(x="Year", y = "'Inherited' carbon footprint in '000 MT", color = "Schools",
+             caption = "Source: Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, Harvard University Financial Report for Fiscal Year 2019, Fund management website, Financial Reports of Harvard Schools, Wesbites Harvard Schools, own Analysis.")+
+        
+        # Aesthetics
+        
+        theme_fivethirtyeight()+
+        theme(axis.title = element_text(colour = "black", size = 12),
+              plot.title = element_text(size = 14, hjust = 0),
+              plot.subtitle = element_text(size = 10, hjust = 0),
+              plot.caption = element_text(size = 7, hjust = 0))
+```
+
+
+While the relative weight of the portfolio was adjusted to reduce the carbon footprint, the average footprint of a company Harvard is invested in decreaesed much less rapidly from ~4.6 million MT to  ~3.9 million MT between 2014 and 2017. Comparing this with a random sample of CDP companies in a given year, indicates that it remains significantly above what we would expect on average. This is true for all years between 2014 and 2017.
+
+
+```{r, fig.width= 12, fig.height = 5}
+br()
+#3. Graph on comparison between average of Harvard endowment compared to random sample 
+
+# A. Read in relevant data that we copied over from the clean-data file to App 
+CCF_per_year_average_all <- read_rds("clean-data/CCF_per_year_average_all.rds")
+CCF_per_year_average_HMC <- read_rds("clean-data/CCF_per_year_average_HMC.rds")
+
+    #Pull out relevant HMC value from subset
+    Graph_3 <-CCF_per_year_average_all%>% filter(Year == 2017)
+    Graph_4 <-CCF_per_year_average_HMC%>% filter(Year == 2017)
+
+    HMC <- Graph_4["Average_carbon_footprint_per_company"]%>%pull()
+        
+    ggplot(Graph_3, aes(x=Graph_3$Average_carbon_footprint_per_company, y =0)) +
+        stat_density_ridges()+ # Visualization via stat_density_ridges
+        scale_x_continuous(breaks = c(2000,4000,6000),limits = c(0,8500))+ # set x axis
+        labs(title = "Average corporate footprint in endowment portfolio larger than random CDP sample in all years", 
+             subtitle = "1000 repetitions per year with size 562 (Companies in Harvard Management Company's SEC filing that could be matched to CDP data)", 
+             x = "Carbon footprint in '000 MTs", y = "Frequency",
+             caption = "Source: Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, Harvard University Financial Report for Fiscal Year 2019, Fund management website Financial Reports of Harvard Schools, Wesbites Harvard Schools, own Analysis.")+
+        geom_vline(xintercept = HMC,size = 1, color = "red")+
+        geom_text(aes(x = HMC, y = 0, label = "Endowment average"),size=5, angle=90, vjust=-0.4, hjust=0, color = "red")+
+        theme_fivethirtyeight()+
+        theme(axis.title = element_text(colour = "black", size = 9),
+              plot.title = element_text(size = 14, hjust = 0),
+              plot.subtitle = element_text(size = 10, hjust = 0),
+              plot.caption = element_text(size = 7, hjust = 0))
+```
+
+
+#### 2. Conclusions on the additional footprint per student
+The carbon footprint 'inherited' via the endowment has to be understood as the carbon footprint inherited by enjoying the operations of the Harvard Schools in addition to the average annual carbon footprint we cause through our daily activities like food consumption, heating, flights, etc. The size of the carbon footprint 'inherited' via the endowment for every student is larger than the average annual carbon footprint per individual in the US for 8 of the 10 Harvard schools. Only students at the Design School land significantly below that. Because of the small student population and the large share of the operating revenue stemming from "Endowment Income made available for operations" (74%) the 'inherited' footprint for divinity school students is especially large (4.5x the average individual footprint). For students at all schools a significant reallocation of assets into companies with smaller carbon footprints is by far the largest potential lever on the individual carbon footprint (except having one fewer child, which would reduce the footprint by -117.7 MT p.a.). If the Harvard endowment were invested in assets with half the current carbon footprint, this would remain true by a factor of between 39.2 (Divinity School) and 8.5 (Design School) compared to giving up all meat consumption (- 0.91 MT p.a.).
+
+
+```{r, fig.width= 12, fig.height = 5}
+#2. Graph on carbon footprint per student at FAS
+
+CCF_per_student_red <- read_rds("clean-data/CCF_per_student_red.rds")
+
+Graph_2 <-CCF_per_student_red %>% filter(Schools == "FAS (College & GSAS & SEAS)")
+
+    ggplot(Graph_2, 
+           aes(x=Graph_2$Type, y=Graph_2$Carbon_footprint_in_MT, fill =Graph_2$Type))+ # data set
+        geom_col(stat="identity", 
+                 fill=ifelse(Graph_2$Carbon_footprint_in_MT >0,"#f68060","#007f00"), 
+                 alpha=.6, width=.4) + # Columnn graph with conditional fill formatting
+        geom_text(aes(x = Graph_2$Type, y = Graph_2$Carbon_footprint_in_MT, 
+                      label = abs(Graph_2$Carbon_footprint_in_MT)), # Adding text labels to the bars witha actual values 
+                      color = ifelse(Graph_2$Carbon_footprint_in_MT >0,"#f68060","#007f00"))+ # Colors with conditional formatting
+        coord_flip() +
+        #smoothed trend line of performance  
+        scale_y_continuous(limits = c(min(Graph_2$Carbon_footprint_in_MT-1),max(Graph_2$Carbon_footprint_in_MT+1)))+ # adaptive scales in min and max of y dependent on which school is selected
+        
+        # add labels
+        labs(title = "Annual carbon footprint per student and most important reduction levers", 
+             x="", y = "Annual carbon footprint in MT", color = "Type",
+             caption = "The latest available data (displayed) is for 2017. \n Note: A reduction lever not included above is having one fewer child (-117.7 MT p.a.). \n Sources: Wynes & Nicholas (2017): The climate mitigation gap, Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, \n Harvard University Financial Report for Fiscal Year 2019, Fund management website, Financial Reports of Harvard Schools, Wesbites Harvard Schools, \n EPA Energy Review November 2019, own Analysis.")+
+        
+        # Add aesthetics 
+        
+        theme_fivethirtyeight()+
+        theme(axis.title = element_text(colour = "black", size = 10),
+              plot.title = element_text(size = 14, hjust = 0),
+              plot.subtitle = element_text(size = 10, hjust = 0),
+              plot.caption = element_text(size = 7, hjust = 0))
+```

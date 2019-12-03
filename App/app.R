@@ -55,7 +55,7 @@ ui <- navbarPage("Carbon footprint inherited through the Harvard Endowment", the
 
              tabPanel("Carbon footprint - Harvard Students",
                           
-                          titlePanel("Carbon footprint per student - the significance of asset reallocation as a lever to reduce the carbon footprint"),
+                          titlePanel("Carbon footprint per student - asset reallocation by far most important lever to reduce individual carbon footprint"),
                           
     #Select school from dropdown menu for development of annual carbon footprint 'inherited' via endowment and accordingly what reduction could mean
     # Default is FAS
@@ -199,7 +199,10 @@ output$linePlot <- renderPlot({
         # Aesthetics
         
         theme_fivethirtyeight()+
-        theme(axis.title = element_text(colour = "black" ))
+        theme(axis.title = element_text(colour = "black", size = 12),
+              plot.title = element_text(size = 14, hjust = 0),
+              plot.subtitle = element_text(size = 10, hjust = 0),
+              plot.caption = element_text(size = 10, hjust = 0))
 }
 )
 
@@ -226,14 +229,17 @@ output$barPlot <- renderPlot({
         scale_y_continuous(limits = c(min(subset_2()$Carbon_footprint_in_MT-1),max(subset_2()$Carbon_footprint_in_MT+1)))+ # adaptive scales in min and max of y dependent on which school is selected
         
         # add labels
-        labs(title = "Annual carbon footprint per student and most important reduction levers", 
+        labs(title = "Annual carbon footprint per student in 2017 and most important reduction levers", 
              x="", y = "Annual carbon footprint in MT", color = "Type",
-             caption = "The latest available data (displayed) is for 2017. Note: A reduction lever not included above is having one fewer child (-117.7 MT p.a.). Data sources: Wynes & Nicholas (2017): The climate mitigation gap, Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, Harvard University Financial Report for Fiscal Year 2019, Fund management website, Financial Reports of Harvard Schools, Wesbites Harvard Schools, EPA Energy Review November 2019, own Analysis.")+
+             caption = "The latest available data (displayed) is for 2017. \n Note: A reduction lever not included above is having one fewer child (-117.7 MT p.a.). \n Sources: Wynes & Nicholas (2017): The climate mitigation gap, Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, Harvard University Financial Report for Fiscal Year 2019, \n Fund management website, Financial Reports of Harvard Schools, Wesbites Harvard Schools, EPA Energy Review November 2019, own Analysis")+
         
         # Add aesthetics 
         
         theme_fivethirtyeight()+
-        theme(axis.title = element_text(colour = "black" ))
+        theme(axis.title = element_text(colour = "black", size = 10),
+              plot.title = element_text(size = 14, hjust = 0),
+              plot.subtitle = element_text(size = 10, hjust = 0),
+              plot.caption = element_text(size = 10, hjust = 0))
 }
 )
 
@@ -263,14 +269,16 @@ output$averagePlot <- renderPlot({
         labs(title = "Average footprint of companies in Harvard endowment portfolio larger than from random CDP sample for each year", 
              subtitle = "1000 repetitions per year with size 562 (Companies in Harvard Management Company's SEC filing that could be matched to CDP data)", 
              x = "Carbon footprint in '000 MTs", y = "Frequency",
-             caption = "Source: Source: Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, Harvard University Financial Report for Fiscal Year 2019, Fund management website, Financial Reports of Harvard Schools, Wesbites Harvard Schools, own Analysis.")+
+             caption = "Source: Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, Harvard University Financial Report for Fiscal Year 2019, Fund management website Financial Reports of Harvard Schools, Wesbites Harvard Schools, own Analysis.")+
         geom_vline(xintercept = HMC,size = 1, color = "red")+
-        geom_text(aes(x = HMC, y = 0, label = "Harvard endowment average"),size=4, angle=90, vjust=-0.4, hjust=0, color = "red")+
+        geom_text(aes(x = HMC, y = 0, label = "Endowment average"),size=5, angle=90, vjust=1.1, hjust=-1, color = "red")+
         theme_fivethirtyeight()+
-        theme(axis.title = element_text(colour = "black" ))
+        theme(axis.title = element_text(colour = "black", size = 12),
+              plot.title = element_text(size = 18, hjust = 0),
+              plot.subtitle = element_text(size = 14, hjust = 0),
+              plot.caption = element_text(size = 10, hjust = 0))
 }
 )
-
 }
 
 

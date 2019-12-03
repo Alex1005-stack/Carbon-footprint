@@ -18,4 +18,8 @@
   #A. 2 Copy about page   
     file.remove("App/About.md")
     file.copy(from = "About.md", to = "App/About.md")
+  
+  #A. 3 Copy PDF   
+    file.remove("App/www/An-investment-in-the-past.pdf")
+    file.copy(from = "An-investment-in-the-past.pdf", to = "App/www/An-investment-in-the-past.pdf")
     
