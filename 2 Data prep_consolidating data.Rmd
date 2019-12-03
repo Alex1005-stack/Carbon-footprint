@@ -56,7 +56,6 @@ HMC_CCF_v2 <- HMC_CCF %>%
               left_join(HMC_CCF_year, by = c("Year", "Year")) %>%
               mutate(Rebased_portfolio_share = `Share of portfolio`/Total_share_year)
 
-
 #A.5 CONTROL: Share of portfolio available in data per year must all be 1
 
 HMC_CCF_v2 %>%

@@ -267,7 +267,7 @@ write_rds(ccf_total_n_a, "clean-data/ccf_combined.rds", compress = "none")
 #B. Bloomberg data on market capitalization of companies
 
 
-# B.1 Adding Bloomber data: Download list of ISIN's that to determine market value per 09/30 via Bloomberg tunnels (Bloomberg only has Excel interface at disposal, available at Business School library) / Note: Market Cap according on main listed exchange acc. to Bloomberg data based on ISIN per 09/30/19 / Cast marketcap as number
+# B.1 Adding Bloomberg data: Download list of ISIN's to determine market value per 09/30 via Bloomberg tunnels (Bloomberg only has Excel interface at disposal, available at Business School library) / Note: Market Cap according on main listed exchange acc. to Bloomberg data based on ISIN per 09/30/19 / Cast marketcap as number
 
 Bloomberg_list <- ccf_total_n_a %>%
                   select("ISIN") %>%

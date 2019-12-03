@@ -28,7 +28,7 @@ ui <- navbarPage("Carbon footprint inherited through the Harvard Endowment", the
 #B.2 Defining first panel, Carbon footprint inherited through the endowment fund with financing of operations for each of the schools and total                 
                  
                  tabPanel("Carbon footprint - Harvard Schools",
-                 titlePanel("Carbon footprint 'inherited' by schools annualy from Harvard endowment to finance operations"),
+                 titlePanel("An investment in the past - Carbon footprint 'inherited' annually through endowment income made available for operations"),
 
 #B.3 Defining potential user inputs in a sidebar 
     # Link to Srever via ID "Schools", define label of inputs as "School(s)"
@@ -39,7 +39,7 @@ ui <- navbarPage("Carbon footprint inherited through the Harvard Endowment", the
 
                  sidebarLayout(
                      sidebarPanel(
-                         selectInput("Schools",label = strong("School(s)"),
+                         selectInput("Schools",label = strong("Add School(s):"),
                                      choices = unique(CCF_per_school$Schools),
                                      selected = "Total",
                                      multiple = TRUE
@@ -65,17 +65,17 @@ ui <- navbarPage("Carbon footprint inherited through the Harvard Endowment", the
                                   radioButtons("Students",label = strong("Your school:"),
                                               choices = unique(CCF_per_student_red$Schools),
                                               selected = "FAS (College & GSAS & SEAS)"
-                                  ), width = 3),
+                                  ), width = 2),
                               
     # Default is FAS
                               
                               mainPanel(
                                   plotOutput("barPlot")
-                        , width = 9))),
+                        , width = 10))),
 
 #B.6 Define third panel on carbon footprint per portfolio company that could be matched with CDP data
 
-                 tabPanel("Carbon footprint - portfolio companies (only those part of CDP self-reporting)",
+                 tabPanel("Carbon footprint - portfolio companies (only 1% & in CDP data)",
                           DT::dataTableOutput("Emitters")
                  ),
 
@@ -163,7 +163,7 @@ output$Students <- renderPlot({
         geom_bar(stat="identity", fill="#f68060", alpha=.6, width=.4) +
         geom_text(aes(x = name, y = Student_pop.x, label = Student_pop.x))+
         coord_flip() +
-        labs(title = "Student body per Harvard School", x = "", y = "Students", caption = "Source: Harvard.. TO DO.")+
+        labs(title = "Student body per Harvard School", x = "", y = "Students", caption = "Source: Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, Harvard University Financial Report for Fiscal Year 2019, Fund management website, Financial Reports of Harvard Schools, Wesbites Harvard Schools, own Analysis.")+
         theme_fivethirtyeight()
 })
 
@@ -194,7 +194,7 @@ output$linePlot <- renderPlot({
     # add labels
         
         labs(x="Year", y = "'Inherited' carbon footprint in '000 MT", color = "Schools",
-             caption = "Data sources: ... TO DO ...Carbon Disclosure Project, HMC SEC filings, HMC annual reports, websites of asset managers, Bloomberg, own calculations")+
+             caption = "Source: Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, Harvard University Financial Report for Fiscal Year 2019, Fund management website, Financial Reports of Harvard Schools, Wesbites Harvard Schools, own Analysis.")+
         
         # Aesthetics
         
@@ -228,7 +228,7 @@ output$barPlot <- renderPlot({
         # add labels
         labs(title = "Annual carbon footprint per student and most important reduction levers", 
              x="", y = "Annual carbon footprint in MT", color = "Type",
-             caption = "The latest available data (displayed) is for 2017. Note: A reduction lever not included above is having one fewer child (-117.7 MT p.a.). Data sources: Wynes & Nicholas (2017): The climate mitigation gap, Carbon Disclosure Project, HMC SEC filings, HMC annual reports, websites of asset managers, Bloomberg, own calculations, EPA Energy Review November 2019. ... TO DO")+
+             caption = "The latest available data (displayed) is for 2017. Note: A reduction lever not included above is having one fewer child (-117.7 MT p.a.). Data sources: Wynes & Nicholas (2017): The climate mitigation gap, Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, Harvard University Financial Report for Fiscal Year 2019, Fund management website, Financial Reports of Harvard Schools, Wesbites Harvard Schools, EPA Energy Review November 2019, own Analysis.")+
         
         # Add aesthetics 
         
@@ -240,7 +240,7 @@ output$barPlot <- renderPlot({
 #C.6 Creating data table for emitters (See 2 Data prep for assumptions, details etc.)
 
 output$Emitters <- DT::renderDataTable({
-    DT::datatable(Emitters, caption = "Source: TO DO")
+    DT::datatable(Emitters, caption = "Source: Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, Harvard University Financial Report for Fiscal Year 2019, Fund management website, Financial Reports of Harvard Schools, Wesbites Harvard Schools, own Analysis.")
 })
 
 
@@ -260,10 +260,10 @@ output$averagePlot <- renderPlot({
     ggplot(subset_3(), aes(x=subset_3()$Average_carbon_footprint_per_company, y =0)) +
         stat_density_ridges()+ # Visualization via stat_density_ridges
         scale_x_continuous(breaks = c(2000,4000,6000),limits = c(0,8500))+ # set x axis
-        labs(title = "Average footprint of companies in Harvard endowment portfolio larger than from CDP sample for each year", 
+        labs(title = "Average footprint of companies in Harvard endowment portfolio larger than from random CDP sample for each year", 
              subtitle = "1000 repetitions per year with size 562 (Companies in Harvard Management Company's SEC filing that could be matched to CDP data)", 
              x = "Carbon footprint in '000 MTs", y = "Frequency",
-             caption = "Source: TO DO")+
+             caption = "Source: Source: Carbon Disclosure Project 2014 - 2018, Bloomberg, HMC SEC filings, Harvard University Financial Report for Fiscal Year 2019, Fund management website, Financial Reports of Harvard Schools, Wesbites Harvard Schools, own Analysis.")+
         geom_vline(xintercept = HMC,size = 1, color = "red")+
         geom_text(aes(x = HMC, y = 0, label = "Harvard endowment average"),size=4, angle=90, vjust=-0.4, hjust=0, color = "red")+
         theme_fivethirtyeight()+

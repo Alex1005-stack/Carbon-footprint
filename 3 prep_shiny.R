@@ -18,3 +18,4 @@
   #A. 2 Copy about page   
     file.remove("App/About.md")
     file.copy(from = "About.md", to = "App/About.md")
+    
