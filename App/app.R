@@ -23,12 +23,12 @@ CCF_per_year_average_HMC <- read_rds("CCF_per_year_average_HMC.rds")
 
 
 #B.1 Defining page in Navbar layout and yeti theme            
-ui <- navbarPage("Carbon footprint inherited through the Harvard Endowment", theme = shinytheme("yeti"),
+ui <- navbarPage("An investment in the past - Carbon footprint of the Harvard Endowment", theme = shinytheme("yeti"),
 
 #B.2 Defining first panel, Carbon footprint inherited through the endowment fund with financing of operations for each of the schools and total                 
                  
                  tabPanel("Carbon footprint - Harvard Schools",
-                 titlePanel("An investment in the past - Carbon footprint 'inherited' annually through endowment income made available for operations"),
+                 titlePanel("Carbon footprint 'inherited' by Schools annually through endowment income made available for operations"),
 
 #B.3 Defining potential user inputs in a sidebar 
     # Link to Srever via ID "Schools", define label of inputs as "School(s)"
@@ -55,7 +55,7 @@ ui <- navbarPage("Carbon footprint inherited through the Harvard Endowment", the
 
              tabPanel("Carbon footprint - Harvard Students",
                           
-                          titlePanel("Carbon footprint per student - asset reallocation by far most important lever to reduce individual carbon footprint"),
+                          titlePanel("Carbon footprint 'inherited' by Students - asset reallocation by far most important lever to reduce individual carbon footprint"),
                           
     #Select school from dropdown menu for development of annual carbon footprint 'inherited' via endowment and accordingly what reduction could mean
     # Default is FAS

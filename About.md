@@ -128,6 +128,11 @@ Note: Every Quarter the Harvard Management Company files form 13F to the U.S. Se
 - MT: Metric tonnes of CO2 equivalents.
 
 
-## <br>VI. About Me:</br> 
+## <br>VI. Other course requirements:</br> 
+
+Please find here the <a href="https://github.com/Alex1005-stack/Carbon-footprint.git">source code</a> and a <a href="https://www.youtube.com/watch?v=aMqJtOqotlE&feature=youtu.be">3 minute video</a>.
+
+
+## <br>VII. About Me:</br> 
 
 My name is Alexander Klueber. I am an Master in Public Policy student at the Harvard Kennedy School, passionate about data science and transitioning our economies to a low carbon future. Contact me at <a href="mailto:alexander_klueber@hks.harvard.edu" class="email">alexander_klueber@hks.harvard.edu</a>.
